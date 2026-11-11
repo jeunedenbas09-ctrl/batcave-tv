@@ -45,6 +45,17 @@ def prieres():
     return {"mosquee": "AMC Mosquée de Choisy-Le-Roi", "prieres": out, "jumua": ["12:45", "13:45"]}
 
 def classement_et_match():
+    """Classement et match : tente la FFF (souvent bloquée depuis GitHub), sinon le fichier manuel."""
+    try:
+        base = "https://epreuves.fff.fr/competition/club/500031-choisy-le-roi-as-2/equipe/2026_180_SEM_2/"
+        cl = unescape(re.sub(r"<[^>]+>", " ", get(base + "classement")))
+        cal = unescape(re.sub(r"<[^>]+>", " ", get(base + "resultat-calendrier")))
+        return {"source": base, "classement_brut": " ".join(cl.split())[:4000], "calendrier_brut": " ".join(cal.split())[:4000]}
+    except Exception as e:
+        print("FFF indisponible, fichier manuel utilisé :", e)
+        return json.loads(open("classement_manuel.json", encoding="utf-8").read())
+
+def _ancien_classement():
     """Lit le classement et le prochain match sur le site de la FFF (page publique)."""
     base = "https://epreuves.fff.fr/competition/club/500031-choisy-le-roi-as-2/equipe/2026_180_SEM_2/"
     cl = unescape(re.sub(r"<[^>]+>", " ", get(base + "classement")))
@@ -65,5 +76,7 @@ if __name__ == "__main__":
              "Vos priorités du jour : " + " ; ".join(prio) + ". La Batcave est prête. Force et honneur, Monsieur.")
     donnees["texte"] = texte
     json.dump(donnees, open("donnees.json", "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    asyncio.run(voix(texte, "briefing.mp3"))
+    print("donnees.json et briefing.mp3 prêts")f-8"), ensure_ascii=False, indent=1)
     asyncio.run(voix(texte, "briefing.mp3"))
     print("donnees.json et briefing.mp3 prêts")
